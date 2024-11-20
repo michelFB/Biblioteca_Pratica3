@@ -1,21 +1,26 @@
-from .models import Livro, Autor, Categoria
-from .serializers import LivroSerializer, AutorSerializer, CategoriaSerializer
+from .models import Livro, Autor, Categoria, Colecao
+from .serializers import LivroSerializer, AutorSerializer, CategoriaSerializer, ColecaoSerializer
 from rest_framework import viewsets, generics
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from core.filters import LivroFilter
+from rest_framework import permissions
+from core import custom_permissions
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+
 
 # Create your views here.
 
 class ApiRoot(generics.GenericAPIView):
     name = "api-root"
-
     def get(self, request, *args, **kwargs):
         return Response(
             {
                 "livros": reverse("livro-list", request=request),
                 "autores": reverse("autor-list", request=request),
                 "categorias": reverse("categoria-list", request=request),
+                "colecao": reverse("colecao-list", request=request)
             }
         )
 
@@ -41,8 +46,8 @@ class AutorList(generics.ListCreateAPIView):
     queryset = Autor.objects.all()
     serializer_class = AutorSerializer
     name = "autor-list"
-    search_fields = ("^nome",)
-    ordering_fields = ('nome',)
+    search_fields = ("^name",)
+    ordering_fields = ('name',)
 
 
 class AutorDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -61,3 +66,42 @@ class CategoriaDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
     name = "categoria-detail"
+
+
+class ColecaoViewSet(viewsets.ModelViewSet):
+    queryset = Colecao.objects.all()
+    serializer_class = ColecaoSerializer
+    name = "colecao-list"
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+# class ColecaoListCreate(generics.ListCreateAPIView):
+#     queryset = Colecao.objects.all()
+#     serializer_class = ColecaoSerializer
+#     name = "colecao-list"
+#     search_fields = ("^nome",)
+#     ordering_fields = ("nome",)
+#     # Definindo políticas de permissão
+#     # permission_classes = (
+#     #     permissions.IsAuthenticatedOrReadOnly,
+#     #     custom_permissions.IsCurrentUserOwnerOrReadOnly,
+#     # )
+#     # authentication_classes = (TokenAuthentication,)
+#     # permission_classes = (IsAuthenticated,)
+#     # #Salvando informações sobre usuários autenticados
+#     def perform_create(self, serializer):
+#         serializer.save(owner=self.request.user)
+
+
+# class ColecaoDetail(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Colecao.objects.all()
+#     serializer_class = ColecaoSerializer
+#     name = "colecao-detail"
+
+    # Definindo políticas de permissão
+    # permission_classes = (
+    #     permissions.IsAuthenticatedOrReadOnly,
+    #     custom_permissions.IsCurrentUserOwnerOrReadOnly,
+    # )
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = (IsAuthenticated,)

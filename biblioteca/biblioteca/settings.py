@@ -31,18 +31,21 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     # Django REST framework
-    'rest_framework',
+    "rest_framework",
     # Django Filters
     "django_filters",
     # Core application
-    'core.apps.CoreConfig',
+    "core.apps.CoreConfig",
+    # Token authentication
+    "rest_framework.authtoken",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -136,4 +139,25 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
         "rest_framework.filters.SearchFilter",
     ),
+    # ADIÇÃO DE MÓDULOS DE AUTENTICAÇÃO
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "RESTIC Back-end API",
+    "DESCRIPTION": "Your project description",
+    "VERSION": "1.0.0",
+    "SERVE INCLUDE SCHEMA": False,
+    # OTHER SETTINGS
+    "AUTHENTICATION_WHITELIST": [
+        # Lista de autenticações suportadas na documentação
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,  # Mantém a autorização no Swagger UI durante as requisições
+    },
 }
