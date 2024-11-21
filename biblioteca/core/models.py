@@ -14,7 +14,7 @@ class Autor(models.Model):
     name = models.CharField(max_length=100)
     
     def __str__(self):
-        return self.nome
+        return self.name
 
 class Livro(models.Model):
     titulo = models.CharField(max_length=200)
@@ -29,12 +29,10 @@ class Colecao(models.Model):
     nome = models.CharField(max_length=100, unique=True)
     descricao = models.TextField(blank=True)
     livros = models.ManyToManyField(Livro, related_name="colecoes")
-    colecionador = models.ForeignKey(User, on_delete=models.CASCADE, related_name="colecoes_User")
-
+    colecionador = models.ForeignKey(User, on_delete=models.CASCADE, 
+                                     related_name="colecoes_User")
     # INCLUINDO AUTENTICAÇÃO E PERMISÃO PARA ACESSO AO MODELO <- Lembrar de migra o modelo ao final
-    owner = models.ForeignKey(
-        "auth.User", related_name="colecoes_auth_User", on_delete=models.CASCADE
-    )
+    owner = models.ForeignKey("auth.User", related_name="colecoes_auth_User",on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.nome} - {self.colecionador.username}"

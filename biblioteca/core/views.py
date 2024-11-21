@@ -72,6 +72,11 @@ class ColecaoViewSet(viewsets.ModelViewSet):
     queryset = Colecao.objects.all()
     serializer_class = ColecaoSerializer
     name = "colecao-list"
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (
+            permissions.IsAuthenticatedOrReadOnly,
+            custom_permissions.IsCurrentUserOwnerOrReadOnly,
+        )
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
@@ -81,13 +86,11 @@ class ColecaoViewSet(viewsets.ModelViewSet):
 #     name = "colecao-list"
 #     search_fields = ("^nome",)
 #     ordering_fields = ("nome",)
+#     authentication_classes = (TokenAuthentication,)
 #     # Definindo políticas de permissão
-#     # permission_classes = (
-#     #     permissions.IsAuthenticatedOrReadOnly,
-#     #     custom_permissions.IsCurrentUserOwnerOrReadOnly,
-#     # )
-#     # authentication_classes = (TokenAuthentication,)
-#     # permission_classes = (IsAuthenticated,)
+#     permission_classes = (
+#         permissions.IsAuthenticatedOrReadOnly,
+#         custom_permissions.IsCurrentUserOwnerOrReadOnly,)
 #     # #Salvando informações sobre usuários autenticados
 #     def perform_create(self, serializer):
 #         serializer.save(owner=self.request.user)
@@ -97,11 +100,9 @@ class ColecaoViewSet(viewsets.ModelViewSet):
 #     queryset = Colecao.objects.all()
 #     serializer_class = ColecaoSerializer
 #     name = "colecao-detail"
-
-    # Definindo políticas de permissão
-    # permission_classes = (
-    #     permissions.IsAuthenticatedOrReadOnly,
-    #     custom_permissions.IsCurrentUserOwnerOrReadOnly,
-    # )
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = (IsAuthenticated,)
+#     authentication_classes = (TokenAuthentication,)
+#     # Definindo políticas de permissão
+#     permission_classes = (
+#         permissions.IsAuthenticatedOrReadOnly,
+#         custom_permissions.IsCurrentUserOwnerOrReadOnly,
+#     )

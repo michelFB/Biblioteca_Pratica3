@@ -2,7 +2,7 @@ from django.utils.http import urlencode
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from core.models import Colecao, Autor
+from core.models import Colecao, Autor, Categoria, Livro
 from core import views
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
@@ -12,86 +12,85 @@ import pytest
 class ColecaoTests(APITestCase):
 
     def create_user_and_set_token_credentials(self):
-        user = User.objects.create_user(
-            "user01", "user01@example.com", "user01P4ssw0rD"
+        self.user1 = User.objects.create_user(username="user1", password="password1")
+        self.user2 = User.objects.create_user(username="user2", password="password2")
+
+    def create_livros(self):
+        autor1 = Autor.objects.create(name="J.R.R. Tolkien")
+        autor2 = Autor.objects.create(name="Tanebaw")
+        categoria1 = Categoria.objects.create(nome="Romance")
+        categoria2 = Categoria.objects.create(nome="Fantasia")
+
+        self.livro1 = Livro.objects.create(
+            titulo = "O Senhor dos aneis",
+            autor = autor1,
+            categoria = categoria1,
+            publicado_em = "1954-07-29",
         )
-        token = Token.objects.create(user=user)
-        self.client.credentials(HTTP_AUTHORIZATION="Token {0}".format(token.key))
+        self.livro2 = Livro.objects.create(
+            titulo="Eletronica básica",
+            autor=autor2,
+            categoria=categoria2,
+            publicado_em="2500-07-29",
+        )
 
+    def setUp(self):
+        self.create_user_and_set_token_credentials()
+        self.create_livros()
 
-    def post_colecao(self, nome, descricao, livros, colecionador):
+    def post_colecao(self, data):
         url = reverse("colecao-list")
-        data = {
-            "nome": nome,
-            "descricao": descricao,
-            "livros": livros,
-            "colecionador": colecionador
-            
-        }
         response = self.client.post(url, data, format="json")
         return response
 
-    def test_get_colecao(self):
-        new_colecao_nome = "raro Demais"
-        new_colecao_descricao = "Os melhores de 90"
-        new_colecao_livros = [2]
-        new_colecao_colecionador = 1
-
-        response = self.post_colecao(new_colecao_nome,new_colecao_descricao,
-            new_colecao_livros,new_colecao_colecionador)
-        print("PK {0}".format(Colecao.objects.get().pk))
+    def test_create_collection_auth(self):
+        data = {
+            "nome": "nome",
+            "descricao": "descricao",
+            "livros": [self.livro1.pk],
+            "colecionador": self.user2.pk,
+        }
+        print(data)
+        token = Token.objects.create(user=self.user2)
+        self.client.credentials(HTTP_AUTHORIZATION="Token {0}".format(token.key))
+        response = self.post_colecao(data,)
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(1, Colecao.objects.count())
-        self.assertEqual(new_colecao_nome, Colecao.objects.get().nome)
-        self.assertEqual(new_colecao_descricao, Colecao.objects.get().descricao)
-        self.assertEqual(new_colecao_livros, Colecao.objects.get().livros)
-        self.assertEqual(new_colecao_colecionador, Colecao.objects.get().colecionador)
+        self.assertEqual(response.data["nome"], Colecao.objects.get().nome)
+        self.assertEqual(response.data["descricao"], Colecao.objects.get().descricao)
+        self.assertEqual(response.data["livros"],
+            list(Colecao.objects.get().livros.values_list("pk", flat=True)),
+        )
+        self.assertEqual(response.data["colecionador"], Colecao.objects.get().colecionador.pk)
 
-    #      def post_autores(self, name):
-    #         url = reverse("autor-list")
-    #         data = {"name": name}
-    #         response = self.client.post(url, data, format="json")
-    #         return response
+    def test_edit_user_collection(self):
+        self.client.login(username="user1", password="password1")
+        colecao = Colecao.objects.create(nome="Minha Coleção", descricao="Descrição", colecionador=self.user1)
+        self.client.login(username="user2", password="password2")
+        data = {"nome": "Nova Coleção"}
+        url = f"{self.colecoes_url}{colecao.id}/"
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.client.login(username="user1", password="password1")
+        data = {"nome": "Coleção Editada"}
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["nome"], "Coleção Editada")
 
-    #     # Testa o método POST
-    #      def test_post_and_get_autores(self):
-    #         new_autores_name = "autoresRara10"
-    #         response = self.post_autores(new_autores_name)
-    #         print("PK {0}".format(Autor.objects.get().pk))
-    #         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-    #         self.assertEqual(1, Autor.objects.count())
-    #         self.assertEqual(new_autores_name, Autor.objects.get().name)
-
-    # def create_user_and_set_token_credentials(self):
-    #    user = User.objects.create_user(
-    #        "user01", "user01@example.com", "user01Password"
-    #    )
-    #    token = Token.objects.create(user=user)
-    #    self.client.credentials(HTTP_AUTHORIZATION="Token {0}".format(token.key))
-
-    # def setUp(self):
-    #    self.create_user_and_set_token_credentials()
-    #    self.colecao = Colecao.objects.create(
-    #        nome="COLECAO_TEST",descricao="TESTE",livros=[8],
-    #        colecionador=1,owner="user01")
-
-    # def post_colecao(self, data):
-    #     url = reverse("colecao-list")
-    #     response = self.client.post(url, data, format="json")
-    #     return response
-
-    # # Testa o método POST
-    # def test_post_and_get_colecao(self):
-    #     new_colecao_name = {
-    #         "nome": "COLECAO_TEST",
-    #         "descricao": "TESTE",
-    #         "livros": [8],
-    #         "colecionador": 1,
-    #         "owner": "user01",
-    #     }
-    #     response = self.post_colecao(new_colecao_name)
-    #     print("PK {0}".format(Colecao.objects.get().pk))
-    # print("PK {0}".format(Colecao.objects.get().pk))
-    # self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-    # self.assertEqual(1, Colecao.objects.count())
-    # self.assertEqual(new_colecao_name, Colecao.objects.get().name)
+    def test_create_collection_no_auth(self):
+        data = {
+            "nome": "nome",
+            "descricao": "descricao",
+            "livros": [self.livro1.pk],
+            "colecionador": self.user2.pk,
+        }
+        # self.client.login(username="user1", password="password1")
+        response = self.post_colecao(data,)
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(1, Colecao.objects.count())
+        self.assertEqual(response.data["nome"], Colecao.objects.get().nome)
+        self.assertEqual(response.data["descricao"], Colecao.objects.get().descricao)
+        self.assertEqual(response.data["livros"],
+            list(Colecao.objects.get().livros.values_list("pk", flat=True)),
+        )
+        self.assertEqual(response.data["colecionador"], Colecao.objects.get().colecionador.pk)
