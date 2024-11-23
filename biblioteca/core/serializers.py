@@ -21,7 +21,8 @@ class LivroSerializer(serializers.ModelSerializer):
 
 
 class ColecaoSerializer(serializers.ModelSerializer):
-   # Display the owner's username (read-only)
+    # Display the owner's username (read-only)
+    colecionador = serializers.ReadOnlyField(source="owner.username")
     owner = serializers.ReadOnlyField(source="owner.username")
     class Meta:
         model = Colecao

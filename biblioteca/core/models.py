@@ -32,7 +32,9 @@ class Colecao(models.Model):
     colecionador = models.ForeignKey(User, on_delete=models.CASCADE, 
                                      related_name="colecoes_User")
     # INCLUINDO AUTENTICAÇÃO E PERMISÃO PARA ACESSO AO MODELO <- Lembrar de migra o modelo ao final
-    owner = models.ForeignKey("auth.User", related_name="colecoes_auth_User",on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        User, related_name="colecoes_auth_User", on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return f"{self.nome} - {self.colecionador.username}"

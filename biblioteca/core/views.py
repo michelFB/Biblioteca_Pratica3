@@ -74,11 +74,11 @@ class ColecaoViewSet(viewsets.ModelViewSet):
     name = "colecao-list"
     authentication_classes = (TokenAuthentication,)
     permission_classes = (
-            permissions.IsAuthenticatedOrReadOnly,
+            permissions.IsAuthenticated,
             custom_permissions.IsCurrentUserOwnerOrReadOnly,
         )
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.save(owner=self.request.user,colecionador=self.request.user)
 
 # class ColecaoListCreate(generics.ListCreateAPIView):
 #     queryset = Colecao.objects.all()
